@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from src.core.main import SupabaseProjectGenerator
 
 app = Flask(__name__, template_folder='templates')
-app.secret_key = 'your-secret-key-change-in-production'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24).hex())
 
 generator = SupabaseProjectGenerator()
 
@@ -29,11 +29,11 @@ def create_project():
         specs = request.form['specs']
         username = request.form.get('username')
         password = request.form.get('password')
-        # Use fixed database settings
-        db_host = '192.168.1.43'
-        db_port = '5432'
-        db_user = 'postgres'
-        db_password = 'your_password'
+        # Get database settings from environment or use defaults
+        db_host = os.environ.get('DB_HOST', 'localhost')
+        db_port = os.environ.get('DB_PORT', '5432')
+        db_user = os.environ.get('DB_USER', 'postgres')
+        db_password = os.environ.get('DB_PASSWORD', 'postgres')
         use_local_db = request.form.get('use_local_db', 'false') == 'true'
         
         # Validate required fields

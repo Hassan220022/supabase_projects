@@ -1,0 +1,195 @@
+
+version: '3.8'
+
+services:
+  studio:
+    image: supabase/studio:latest
+    ports:
+      - 3000:3000
+    environment:
+      SUPABASE_URL: http://kong:8001
+      SUPABASE_REST_URL: http://localhost:8001/rest/v1/
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dWxwamFzaHNlOTNvYmtpZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1Mjg2ODgsImV4cCI6MjA3MDg4ODY4OH0.Hcyrmmbbd86kOU9RGpzeJ0b9r7acg-7WOLCTuO0wCfU
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dWxwamFzaHNlOTNvYmtpZnlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTUyODY4OCwiZXhwIjoyMDcwODg4Njg4fQ.FZtt1TsSeWAXSqhsgEBBFQ35rD7Ftl6LAS3CG7wL9Uw
+      STUDIO_PG_META_URL: http://meta:8080
+    
+  kong:
+    image: kong:latest
+    ports:
+      - 8001:8000
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /opt/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,opentelemetry
+    volumes:
+      - ./kong.yml:/opt/kong/kong.yml
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  auth:
+    image: supabase/gotrue:v2
+    ports:
+      - 9999:9999
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:8001
+      
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test@#$%
+      
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_URI_ALLOW_LIST: '*'
+      GOTRUE_DISABLE_SIGNUP: false
+      
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: YEYe522dlvSG-ubZLD9V-grmpsdZkOz9GnKoCvCozYXLSYClRgjHhVzbohGYPBZ9
+      
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: true
+      GOTRUE_MAILER_AUTOCONFIRM: true
+      GOTRUE_SMTP_HOST: localhost
+      GOTRUE_SMTP_PORT: 2500
+      GOTRUE_SMTP_USER: ""
+      GOTRUE_SMTP_PASS: ""
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@example.com
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  rest:
+    image: postgrest/postgrest:latest
+    ports:
+      - 3001:3000
+    environment:
+      PGRST_DB_URI: postgresql://postgres:postgres@localhost:5432/test@#$%
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: YEYe522dlvSG-ubZLD9V-grmpsdZkOz9GnKoCvCozYXLSYClRgjHhVzbohGYPBZ9
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  realtime:
+    image: supabase/realtime:latest
+    ports:
+      - 4000:4000
+    environment:
+      PORT: 4000
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: test@#$%
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_SSL: 'false'
+      JWT_SECRET: YEYe522dlvSG-ubZLD9V-grmpsdZkOz9GnKoCvCozYXLSYClRgjHhVzbohGYPBZ9
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 100
+      SECURE_CHANNELS: 'true'
+      SLOT_NAME: supabase_realtime_rls
+      TEMPORARY_SLOT: 'true'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  storage:
+    image: supabase/storage-api:latest
+    ports:
+      - 5000:5000
+    environment:
+      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dWxwamFzaHNlOTNvYmtpZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1Mjg2ODgsImV4cCI6MjA3MDg4ODY4OH0.Hcyrmmbbd86kOU9RGpzeJ0b9r7acg-7WOLCTuO0wCfU
+      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dWxwamFzaHNlOTNvYmtpZnlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTUyODY4OCwiZXhwIjoyMDcwODg4Njg4fQ.FZtt1TsSeWAXSqhsgEBBFQ35rD7Ftl6LAS3CG7wL9Uw
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: YEYe522dlvSG-ubZLD9V-grmpsdZkOz9GnKoCvCozYXLSYClRgjHhVzbohGYPBZ9
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test@#$%
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      SKIP_API_HOST_CHECK: true
+      REGION: stub
+    volumes:
+      - ./storage:/var/lib/storage
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  meta:
+    image: supabase/postgres-meta:latest
+    ports:
+      - 8080:8080
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: localhost
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: test@#$%
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  functions:
+    image: supabase/edge-runtime:latest
+    ports:
+      - 54321:8081
+    environment:
+      SUPABASE_URL: http://kong:8001
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dWxwamFzaHNlOTNvYmtpZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1Mjg2ODgsImV4cCI6MjA3MDg4ODY4OH0.Hcyrmmbbd86kOU9RGpzeJ0b9r7acg-7WOLCTuO0wCfU
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dWxwamFzaHNlOTNvYmtpZnlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTUyODY4OCwiZXhwIjoyMDcwODg4Njg4fQ.FZtt1TsSeWAXSqhsgEBBFQ35rD7Ftl6LAS3CG7wL9Uw
+      SUPABASE_DB_URL: postgresql://postgres:postgres@localhost:5432/test@#$%
+    volumes:
+      - ./functions:/home/deno/functions:Z
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  analytics:
+    image: supabase/logflare:latest
+    ports:
+      - 4001:4000
+    environment:
+      LOGFLARE_NODE_HOST: 127.0.0.1
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: test@#$%
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      LOGFLARE_API_KEY: YEYe522dlvSG-ubZLD9V-grmpsdZkOz9GnKoCvCozYXLSYClRgjHhVzbohGYPBZ9
+      LOGFLARE_SINGLE_TENANT: true
+      LOGFLARE_SUPABASE_MODE: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  vector:
+    image: timberio/vector:latest
+    ports:
+      - 9001:9001
+    
+volumes:
+  storage:

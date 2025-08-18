@@ -1,0 +1,30 @@
+{
+  "project_name": "test@#$%",
+  "project_ref": "kwulpjashse93obkifyd",
+  "machine_size": "small",
+  "specs": "Test",
+  "machine_ip": "172.30.0.2",
+  "db_config": {
+    "host": "localhost",
+    "port": "5432",
+    "user": "postgres",
+    "password": "postgres",
+    "database": "test@#$%"
+  },
+  "anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dWxwamFzaHNlOTNvYmtpZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1Mjg2ODgsImV4cCI6MjA3MDg4ODY4OH0.Hcyrmmbbd86kOU9RGpzeJ0b9r7acg-7WOLCTuO0wCfU",
+  "service_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dWxwamFzaHNlOTNvYmtpZnlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTUyODY4OCwiZXhwIjoyMDcwODg4Njg4fQ.FZtt1TsSeWAXSqhsgEBBFQ35rD7Ftl6LAS3CG7wL9Uw",
+  "jwt_secret": "YEYe522dlvSG-ubZLD9V-grmpsdZkOz9GnKoCvCozYXLSYClRgjHhVzbohGYPBZ9",
+  "created_at": "2025-08-18T14:51:28.392307",
+  "ports": {
+    "studio": 3000,
+    "kong": 8001,
+    "auth": 9999,
+    "rest": 3001,
+    "realtime": 4000,
+    "storage": 5000,
+    "meta": 8080,
+    "functions": 54321,
+    "analytics": 4001,
+    "vector": 9001
+  }
+}

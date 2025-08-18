@@ -1,0 +1,43 @@
+
+_format_version: "1.1"
+
+services:
+  - name: auth-v1
+    url: http://auth:9999/verify
+    routes:
+      - name: auth-v1-routes
+        paths:
+          - /auth/v1/*
+        strip_path: true
+    
+  - name: rest-v1
+    url: http://rest:3000/
+    routes:
+      - name: rest-v1-routes
+        paths:
+          - /rest/v1/*
+        strip_path: true
+    
+  - name: realtime-v1
+    url: http://realtime:4000/socket/
+    routes:
+      - name: realtime-v1-routes
+        paths:
+          - /realtime/v1/*
+        strip_path: true
+    
+  - name: storage-v1
+    url: http://storage:5000/
+    routes:
+      - name: storage-v1-routes
+        paths:
+          - /storage/v1/*
+        strip_path: true
+    
+  - name: functions-v1
+    url: http://functions:8081/
+    routes:
+      - name: functions-v1-routes
+        paths:
+          - /functions/v1/*
+        strip_path: true

@@ -40,7 +40,7 @@ class ProjectLogger:
 
 class SupabaseProjectGenerator:
     def __init__(self):
-        self.projects_dir = "/root/supabase_projects"
+        self.projects_dir = os.environ.get('SUPABASE_PROJECTS_DIR', os.path.expanduser("~/supabase_projects"))
         self.template_dir = "/workspace/templates"
         self.logger = ProjectLogger()
         
@@ -130,7 +130,7 @@ class SupabaseProjectGenerator:
         
         return anon_key, service_key, secret_key
     
-    def create_project(self, project_name, machine_size, specs, db_host="192.168.1.43", db_port="5432", db_user="postgres", db_password="your_password", username=None, password=None):
+    def create_project(self, project_name, machine_size, specs, db_host="192.168.1.43", db_port="5432", db_user="postgres", db_password="your_password", username=None, password=None, use_local_db=False):
         """Create a new Supabase project with specified parameters"""
         self.logger.clear_logs()  # Clear previous logs
         self.logger.log(f"Starting Supabase project creation: {project_name}")
