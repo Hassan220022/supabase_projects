@@ -1,0 +1,55 @@
+# Vector configuration for {{ project_name }}
+# Supabase logging and metrics collection
+
+[api]
+enabled = true
+address = "0.0.0.0:9001"
+
+# Sources
+[sources.supabase_logs]
+type = "docker_logs"
+include_labels = ["com.docker.compose.project={{ project_name }}"]
+
+[sources.system_metrics]
+type = "host_metrics"
+collectors = ["cpu", "disk", "filesystem", "load", "memory", "network"]
+
+# Transforms
+[transforms.parse_logs]
+type = "remap"
+inputs = ["supabase_logs"]
+source = '''
+  parsed = parse_json(.message) ?? {}
+  .timestamp = now()
+  .service = .label."com.docker.compose.service" ?? "unknown"
+  .level = parsed.level ?? "info"
+  .message = parsed.msg ?? .message
+'''
+
+[transforms.filter_errors]
+type = "filter"
+inputs = ["parse_logs"]
+condition = '.level == "error" || .level == "warn"'
+
+# Sinks
+[sinks.console]
+type = "console"
+inputs = ["parse_logs"]
+encoding.codec = "json"
+
+[sinks.file_logs]
+type = "file"
+inputs = ["parse_logs"]
+path = "/var/log/supabase/{{ project_name }}.log"
+encoding.codec = "json"
+
+[sinks.error_logs]
+type = "file"
+inputs = ["filter_errors"]
+path = "/var/log/supabase/{{ project_name }}_errors.log"
+encoding.codec = "json"
+
+[sinks.metrics]
+type = "prometheus_exporter"
+inputs = ["system_metrics"]
+address = "0.0.0.0:9001"

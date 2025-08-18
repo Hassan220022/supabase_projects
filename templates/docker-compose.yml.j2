@@ -1,0 +1,220 @@
+version: '3.8'
+
+services:
+  studio:
+    image: supabase/studio:latest
+    ports:
+      - {{ ports.studio }}:3000
+    environment:
+      SUPABASE_URL: http://kong:{{ ports.kong }}
+      SUPABASE_REST_URL: http://localhost:{{ ports.kong }}/rest/v1/
+      SUPABASE_ANON_KEY: {{ anon_key }}
+      SUPABASE_SERVICE_KEY: {{ service_key }}
+      STUDIO_PG_META_URL: http://meta:{{ ports.meta }}
+    depends_on:
+      kong:
+        condition: service_healthy
+      meta:
+        condition: service_healthy
+    restart: unless-stopped
+    
+  kong:
+    image: kong:latest
+    ports:
+      - {{ ports.kong }}:8000
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /opt/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,opentelemetry
+    volumes:
+      - ./kong.yml:/opt/kong/kong.yml
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    
+  auth:
+    image: supabase/gotrue:v2
+    ports:
+      - {{ ports.auth }}:9999
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:{{ ports.kong }}
+      
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgresql://{{ db_config.user }}:{{ db_config.password }}@{{ db_config.host }}:{{ db_config.port }}/{{ project_name }}
+      
+      GOTRUE_SITE_URL: http://localhost:{{ ports.studio }}
+      GOTRUE_URI_ALLOW_LIST: '*'
+      GOTRUE_DISABLE_SIGNUP: false
+      
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: {{ jwt_secret }}
+      
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: true
+      GOTRUE_MAILER_AUTOCONFIRM: true
+      GOTRUE_SMTP_HOST: localhost
+      GOTRUE_SMTP_PORT: 2500
+      GOTRUE_SMTP_USER: ""
+      GOTRUE_SMTP_PASS: ""
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@example.com
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    
+  rest:
+    image: postgrest/postgrest:latest
+    ports:
+      - {{ ports.rest }}:3000
+    environment:
+      PGRST_DB_URI: postgresql://{{ db_config.user }}:{{ db_config.password }}@{{ db_config.host }}:{{ db_config.port }}/{{ project_name }}
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: {{ jwt_secret }}
+      PGRST_DB_USE_LEGACY_GUCS: false
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    
+  realtime:
+    image: supabase/realtime:latest
+    ports:
+      - {{ ports.realtime }}:4000
+    environment:
+      PORT: 4000
+      DB_HOST: {{ db_config.host }}
+      DB_PORT: {{ db_config.port }}
+      DB_NAME: {{ project_name }}
+      DB_USER: {{ db_config.user }}
+      DB_PASSWORD: {{ db_config.password }}
+      DB_SSL: 'false'
+      JWT_SECRET: {{ jwt_secret }}
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 100
+      SECURE_CHANNELS: 'true'
+      SLOT_NAME: supabase_realtime_rls
+      TEMPORARY_SLOT: 'true'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    
+  storage:
+    image: supabase/storage-api:latest
+    ports:
+      - {{ ports.storage }}:5000
+    environment:
+      ANON_KEY: {{ anon_key }}
+      SERVICE_KEY: {{ service_key }}
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: {{ jwt_secret }}
+      DATABASE_URL: postgresql://{{ db_config.user }}:{{ db_config.password }}@{{ db_config.host }}:{{ db_config.port }}/{{ project_name }}
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      SKIP_API_HOST_CHECK: true
+      REGION: stub
+    volumes:
+      - ./storage:/var/lib/storage
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    
+  meta:
+    image: supabase/postgres-meta:latest
+    ports:
+      - {{ ports.meta }}:8080
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: {{ db_config.host }}
+      PG_META_DB_PORT: {{ db_config.port }}
+      PG_META_DB_NAME: {{ project_name }}
+      PG_META_DB_USER: {{ db_config.user }}
+      PG_META_DB_PASSWORD: {{ db_config.password }}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    
+  functions:
+    image: supabase/edge-runtime:latest
+    ports:
+      - {{ ports.functions }}:54321
+    environment:
+      JWT_SECRET: {{ jwt_secret }}
+      SUPABASE_URL: http://kong:{{ ports.kong }}
+      SUPABASE_ANON_KEY: {{ anon_key }}
+      SUPABASE_SERVICE_ROLE_KEY: {{ service_key }}
+    volumes:
+      - ./functions:/home/deno/functions
+    restart: unless-stopped
+    
+  analytics:
+    image: supabase/logflare:latest
+    ports:
+      - {{ ports.analytics }}:4000
+    environment:
+      DB_USERNAME: {{ db_config.user }}
+      DB_PASSWORD: {{ db_config.password }}
+      DB_DATABASE: {{ project_name }}
+      DB_HOSTNAME: {{ db_config.host }}
+      DB_PORT: {{ db_config.port }}
+      API_PORT: 4000
+      LOGFLARE_NODE_HOST: 127.0.0.1
+      RELEASE_COOKIE: cookie
+      SECRET_KEY_BASE: {{ jwt_secret }}
+      LOGFLARE_API_KEY: {{ service_key }}
+      SINGLE_TENANT: true
+      SUPABASE_MODE: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    
+  vector:
+    image: timberio/vector:latest-alpine
+    ports:
+      - {{ ports.vector }}:9001
+    environment:
+      VECTOR_CONFIG_DIR: /etc/vector
+    volumes:
+      - ./vector.toml:/etc/vector/vector.toml
+    restart: unless-stopped
+
+networks:
+  default:
+    name: {{ project_name }}_supabase_network
+    driver: bridge
+
+volumes:
+  storage_data:
+    driver: local
+  functions_data:
+    driver: local

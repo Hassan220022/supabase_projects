@@ -16,6 +16,7 @@ import threading
 import time
 from pathlib import Path
 from datetime import datetime, timedelta
+from jinja2 import Environment, FileSystemLoader
 
 class ProjectLogger:
     def __init__(self):
@@ -40,8 +41,15 @@ class ProjectLogger:
 class SupabaseProjectGenerator:
     def __init__(self):
         self.projects_dir = "/root/supabase_projects"
-        self.template_dir = "/root/supabase_project_generator/templates"
+        self.template_dir = "/workspace/templates"
         self.logger = ProjectLogger()
+        
+        # Setup Jinja2 environment
+        self.jinja_env = Environment(
+            loader=FileSystemLoader(self.template_dir),
+            trim_blocks=True,
+            lstrip_blocks=True
+        )
         
     def get_machine_ip(self):
         """Get the machine's IP address"""
