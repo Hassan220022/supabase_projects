@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}My Projects - Supabase Project Generator{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center animate-fade-in-up">
+        <h1 class="hero-title">Projects</h1>
+        <p class="muted">Manage, start, stop, and delete your Supabase projects.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show animate-fade-in-up" role="alert">
+                            <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+                    
+            {% if projects %}
+                <div class="table-responsive" data-project-status>
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Machine Info</th>
+                                <th>Specifications</th>
+                                <th>Service Status</th>
+                                <th>Created At</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ project.name }}</strong>
+                                        <div class="small text-muted">{{ project.path }}</div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <span class="badge bg-primary">{{ project.machine_size }}</span>
+                                            <br><small class="text-muted">IP: {{ project.machine_ip }}</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ project.specs }}</td>
+                                    <td>
+                                        {% if project.service_status %}
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% for service, status in project.service_status.items() %}
+                                                    {% if service in ['studio', 'kong', 'auth'] %}
+                                                        <span class="badge bg-{{ 'success' if status else 'danger' }}">{{ service }}: {{ project.ports[service] }}</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">Status unavailable</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ project.created_at }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <!-- Service Status Indicator -->
+                                            {% set running_services = project.service_status.values() | list | select | list | length if project.service_status else 0 %}
+                                            {% set is_running = running_services > 0 %}
+                                            
+                                            <!-- Start/Stop Button -->
+                                            {% if is_running %}
+                                                <button type="button" class="btn btn-warning btn-sm" onclick="controlProject('{{ project.name }}', 'stop', event)" title="Stop Project">
+                                                    <i class="fas fa-stop me-1"></i>Stop
+                                                </button>
+                                            {% else %}
+                                                <button type="button" class="btn btn-success btn-sm" onclick="controlProject('{{ project.name }}', 'start', event)" title="Start Project">
+                                                    <i class="fas fa-play me-1"></i>Start
+                                                </button>
+                                            {% endif %}
+                                            
+                                            {% if is_running %}
+                                                <a href="http://{{ project.machine_ip }}:{{ project.ports.studio }}" class="btn btn-outline-secondary btn-sm" target="_blank" title="Open Studio">
+                                                    Studio
+                                                </a>
+                                            {% endif %}
+                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete('{{ project.name }}', event)">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted">
+                        Showing {{ projects|length }} project(s)
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-secondary" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="feature-icon mx-auto bg-secondary bg-opacity-10 text-secondary mb-3">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h4>No Projects Found</h4>
+                    <p class="text-muted mb-4">You haven't created any Supabase projects yet.</p>
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-1"></i>Create Your First Project
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copyPath(path) {
+        navigator.clipboard.writeText(path).then(function() {
+            showToast('success', 'Path copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            showToast('error', 'Failed to copy path to clipboard');
+        });
+    }
+    
+    function controlProject(projectName, action, event) {
+        const button = event.target.closest('button');
+        const originalContent = button.innerHTML;
+        
+        // Show loading state
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+        
+        fetch(`/api/project/${projectName}/${action}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('success', data.message);
+                // Reload page after short delay to show updated status
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showToast('error', data.message || `Failed to ${action} project`);
+                button.disabled = false;
+                button.innerHTML = originalContent;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', `Failed to ${action} project`);
+            button.disabled = false;
+            button.innerHTML = originalContent;
+        });
+    }
+    
+    function confirmDelete(projectName, event) {
+        if (confirm(`Are you sure you want to delete project "${projectName}"? This action cannot be undone.`)) {
+            controlProject(projectName, 'delete', event);
+        }
+    }
+    
+    function showToast(type, message) {
+        const toastContainer = document.getElementById('toast-container') || createToastContainer();
+        const toast = document.createElement('div');
+        toast.className = `toast show align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+    
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+        return container;
+    }
+    
+    // Auto-refresh project status every 15 seconds if user is on page
+    setInterval(() => {
+        if (!document.hidden && document.querySelectorAll('[data-project-status]').length > 0) {
+            // Only refresh if there are projects and user is actively viewing
+            fetch('/api/projects/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.should_refresh) {
+                        location.reload();
+                    }
+                })
+                .catch(err => console.log('Status check failed:', err));
+        }
+    }, 15000);
+</script>
+{% endblock %}

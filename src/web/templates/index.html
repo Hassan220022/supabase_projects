@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <h1 class="hero-title mb-1">Create Supabase Project</h1>
+        <p class="muted mb-0">Self-hosted. Latest images. Health checks. Simple.</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card mb-5">
+                <div class="card-header">
+                    <strong>Project Configuration</strong>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="/create" id="projectForm">
+                        <!-- Project Basic Info -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="project_name" class="form-label">Project Name</label>
+                                <input type="text" class="form-control" id="project_name" name="project_name" 
+                                       placeholder="my-awesome-project" required 
+                                       pattern="[a-zA-Z0-9-_]+" 
+                                       title="Only letters, numbers, hyphens and underscores allowed">
+                                <div class="form-text muted">Used for Docker containers and database names</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="machine_size" class="form-label">Machine Size</label>
+                                <select class="form-select" id="machine_size" name="machine_size" required>
+                                    <option value="">Choose a size</option>
+                                    <option value="small">Small — Dev</option>
+                                    <option value="medium">Medium — Staging</option>
+                                    <option value="large">Large — Prod</option>
+                                    <option value="xlarge">XLarge — High traffic</option>
+                                </select>
+                                <div class="form-text muted">Pick based on expected workload</div>
+                            </div>
+                        </div>
+
+                        <!-- Specifications -->
+                        <div class="mb-4">
+                            <label for="specs" class="form-label">Additional Specifications (optional)</label>
+                            <textarea class="form-control" id="specs" name="specs" rows="3" 
+                                      placeholder="Any special requirements or notes..."></textarea>
+                            <div class="form-text muted">Optional notes for your setup</div>
+                        </div>
+
+                        <!-- Access Credentials -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">Studio Username (optional)</label>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="admin">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">Studio Password (optional)</label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="••••••••">
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-cogs me-2"></i>Create Supabase Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

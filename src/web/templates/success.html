@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Project Created - Supabase Project Generator{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container animate-fade-in-up">
+        <h1 class="hero-title mb-1">Project Created</h1>
+        <p class="muted mb-0">"{{ project_name }}" is set up and services are starting.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <!-- Quick Access Panel -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card animate-fade-in-up" style="animation-delay: 0.2s;">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0">Quick Access</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="http://{{ config.machine_ip }}:{{ config.ports.studio }}" 
+                               class="btn btn-primary w-100 btn-lg" target="_blank">
+                                Supabase Studio
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="http://{{ config.machine_ip }}:{{ config.ports.kong }}" 
+                               class="btn btn-outline-primary w-100 btn-lg" target="_blank">
+                                API Gateway
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/projects" class="btn btn-outline-secondary w-100 btn-lg">
+                                All Projects
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Project Details -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 animate-fade-in-up" style="animation-delay: 0.3s;">
+                <div class="card-footer">
+                <small class="text-muted">Project created at: {{ project.created_at }}</small>
+                {% if docker_result %}
+                <div class="mt-2">
+                    <strong>Docker Status:</strong>
+                    {% if docker_result.success %}
+                        <span class="badge bg-success">✅ {{ docker_result.message }}</span>
+                    {% else %}
+                        <span class="badge bg-danger">❌ {{ docker_result.message }}</span>
+                    {% endif %}
+                    {% if docker_result.output %}
+                    <pre class="mt-2 p-2 bg-light text-dark rounded"><small>{{ docker_result.output }}</small></pre>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+                <div class="card-body text-center">
+                    <h4 class="mb-3">Project "{{ project_name }}" Created</h4>
+                    <p class="muted mb-4">Your Supabase project was generated with the latest images and health checks.</p>
+                    
+                    <div class="alert alert-success text-start" role="alert">
+                        <h5 class="alert-heading">Project Location</h5>
+                        <p class="mb-0">{{ project_path }}</p>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyPath('{{ project_path }}')">Copy Path</button>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0">API Keys</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-2"><strong>Anon Key:</strong></p>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <input type="text" class="form-control form-control-sm" value="{{ config.anon_key }}" readonly>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="copyText(this)">Copy</button>
+                                    </div>
+                                    <p class="mb-2"><strong>Service Key:</strong></p>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control form-control-sm" value="{{ config.service_key }}" readonly>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="copyText(this)">Copy</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Service Ports</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-2"><strong>Machine IP:</strong> {{ config.machine_ip }}</p>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% if config.ports %}
+                                            <span class="badge bg-info">Studio: {{ config.ports.studio }}</span>
+                                            <span class="badge bg-info">Kong: {{ config.ports.kong }}</span>
+                                            <span class="badge bg-info">Auth: {{ config.ports.auth }}</span>
+                                            <span class="badge bg-info">Rest: {{ config.ports.rest }}</span>
+                                            <span class="badge bg-info">Realtime: {{ config.ports.realtime }}</span>
+                                            <span class="badge bg-info">Storage: {{ config.ports.storage }}</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Studio: 3000</span>
+                                            <span class="badge bg-info">Kong: 8000</span>
+                                            <span class="badge bg-info">Auth: 9999</span>
+                                            <span class="badge bg-info">Rest: 3001</span>
+                                            <span class="badge bg-info">Realtime: 4000</span>
+                                            <span class="badge bg-info">Storage: 5000</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Creation Logs</h4>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#logsCollapse" aria-expanded="false" aria-controls="logsCollapse">Toggle</button>
+                </div>
+                <div class="card-body">
+                    {% if creation_logs %}
+                        <div id="logsCollapse" class="collapse show">
+                            <div class="bg-dark text-light p-3 rounded" style="font-family: 'Courier New', monospace; font-size: 0.9em; max-height: 400px; overflow-y: auto;">
+                            {% for log in creation_logs %}
+                                <div class="mb-1">
+                                    {% if 'ERROR' in log %}
+                                        <span class="text-danger">{{ log }}</span>
+                                    {% elif '✅' in log %}
+                                        <span class="text-success">{{ log }}</span>
+                                    {% elif '⚠️' in log %}
+                                        <span class="text-warning">{{ log }}</span>
+                                    {% elif '🌐' in log or '🔌' in log or '📁' in log %}
+                                        <span class="text-info">{{ log }}</span>
+                                    {% else %}
+                                        <span class="text-light">{{ log }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Using hosted PostgreSQL server at {{ config.db_host }}:{{ config.db_port }}
+                                <span class="badge bg-success ms-2">No Local DB</span>
+                            </small>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No creation logs available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Getting Started</h4>
+                </div>
+                <div class="card-body">
+                    <p>Follow these steps to launch your Supabase project:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="text-center">
+                                <div class="feature-icon mx-auto mb-3">1</div>
+                                <h5>Navigate</h5>
+                                <div class="code-block">cd {{ project_path }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="text-center">
+                                <div class="feature-icon mx-auto mb-3">2</div>
+                                <h5>Launch</h5>
+                                <div class="code-block">docker-compose up -d</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="text-center">
+                                <div class="feature-icon mx-auto mb-3">3</div>
+                                <h5>Access</h5>
+                                <p class="mb-1"><a href="http://localhost:3000" target="_blank">Supabase Studio</a></p>
+                                <small class="text-muted">http://localhost:3000</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">Project Details</h5>
+                        <ul class="mb-0">
+                            <li>Uses latest Supabase Docker images</li>
+                            <li>Includes health checks for all services</li>
+                            <li>Configured with secure 32-character keys</li>
+                            <li>Integrated with PostgreSQL at 192.168.1.43:5432</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-8 text-center">
+            <div class="d-grid gap-2 d-md-flex justify-content-center">
+                <a href="/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Create Another Project
+                </a>
+                <a href="/projects" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-project-diagram me-2"></i>View All Projects
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copyPath(path) {
+        navigator.clipboard.writeText(path).then(function() {
+            // Show a temporary success message
+            var alert = document.querySelector('.alert');
+            var originalHTML = alert.innerHTML;
+            alert.innerHTML = '<h5 class="alert-heading"><i class="fas fa-folder me-2"></i>Project Location</h5><p class="mb-0">Path copied to clipboard!</p>';
+            setTimeout(function() {
+                alert.innerHTML = originalHTML;
+            }, 2000);
+        });
+    }
+    
+    function copyText(button) {
+        var input = button.previousElementSibling;
+        input.select();
+        document.execCommand('copy');
+        
+        // Show temporary success message
+        var originalText = button.innerHTML;
+        button.innerHTML = 'Copied!';
+        setTimeout(function() {
+            button.innerHTML = originalText;
+        }, 2000);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Supabase Project Generator{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --bg-elev: #1a1a1a;
+            --border: #444;
+            --text: #ffffff;
+            --muted: #cccccc;
+            --primary: #0066cc;
+            --primary-600: #0052a3;
+            --danger: #ff3333;
+            --warning: #ff9900;
+            --success: #00cc66;
+            --info: #00ccff;
+            --font-size-base: 1.2rem;
+            --font-size-lg: 1.4rem;
+            --line-height: 1.7;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: var(--font-size-base);
+            line-height: var(--line-height);
+        }
+        .navbar {
+            background: var(--bg-elev);
+            border-bottom: 1px solid var(--border);
+        }
+        .navbar-brand { color: var(--primary) !important; font-weight: 700; font-size: 1.4rem; }
+        .nav-link { color: #ffffff; font-weight: 500; font-size: 1.2rem; }
+        .nav-link:hover, .nav-link.active { color: var(--text); }
+        .card { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 10px; }
+        .card-header { background: #333333; border-bottom: 1px solid var(--border); color: #ffffff; font-weight: 600; font-size: 1.3rem; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); color: #0b1220; font-weight: 600; }
+        .btn-primary:hover { background: var(--primary-600); border-color: var(--primary-600); }
+        .btn-outline-secondary, .btn-outline-primary, .btn-outline-danger { border-color: var(--border); color: var(--text); }
+        .btn-outline-secondary:hover, .btn-outline-primary:hover, .btn-outline-danger:hover { background: var(--bg-elev); border-color: var(--text); }
+        .form-control, .form-select { 
+            background: #2d2d2d; 
+            color: var(--text); 
+            border: 1px solid var(--border); 
+            border-radius: 8px;
+            font-size: 1.2rem;
+            padding: 0.75rem;
+        }
+        .form-control::placeholder { color: #5b6575; }
+        .form-label { 
+            color: var(--text); 
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .table { color: #ffffff; font-size: 1.2rem; }
+        .table thead { background: #333333; color: #ffffff; }
+        .table-hover tbody tr:hover { background: #121722; }
+        .alert { border-radius: 8px; }
+        .muted { color: #dddddd !important; font-size: 1.2rem; font-weight: 500; }
+        .badge { border-radius: 8px; }
+        .badge.bg-success { background-color: #22c55e !important; }
+        .badge.bg-danger { background-color: #ef4444 !important; }
+        .badge.bg-info { background-color: #3b82f6 !important; }
+        .badge.bg-warning { background-color: #f59e0b !important; color: #0b1220; }
+        .footer { background: var(--bg-elev); border-top: 1px solid var(--border); color: var(--muted); margin-top: auto; }
+        .hero-section { background: var(--bg-elev); padding: 30px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+        .feature-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); }
+        .code-block { background: #0c0f14; border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; font-family: 'JetBrains Mono', monospace; color: #9bd1ff; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+        .animate-fade-in-up { animation: fadeInUp .3s ease-out; }
+        @media (max-width: 768px) { .hero-title { font-size: 1.75rem; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-database me-2"></i>Supabase Generator
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-plus-circle me-1"></i>Create Project
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/projects">
+                            <i class="fas fa-folder-open me-1"></i>My Projects
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer py-4 mt-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 muted">
+                        <i class="fas fa-code me-2"></i>Supabase Project Generator
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 muted">
+                        Clean dark UI • Minimal distractions
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            for (var i = 0; i < alerts.length; i++) {
+                var bsAlert = new bootstrap.Alert(alerts[i]);
+                bsAlert.close();
+            }
+        }, 5000);
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,16 @@
+[Unit]
+Description=Supabase Project Generator Web Interface
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/supabase_project_generator
+Environment=FLASK_APP=web_interface.py
+Environment=FLASK_ENV=production
+ExecStart=/usr/bin/flask run --host=0.0.0.0 --port=8000
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
