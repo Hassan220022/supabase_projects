@@ -1,0 +1,21 @@
+[Unit]
+Description=Supabase Project Generator Web Interface
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/workspace
+Environment="FLASK_ENV=production"
+Environment="SUPABASE_DB_HOST=192.168.1.43"
+Environment="SUPABASE_DB_PORT=5432"
+Environment="SUPABASE_DB_USER=postgres"
+Environment="SUPABASE_DB_PASSWORD=postgres"
+Environment="SUPABASE_PROJECTS_DIR=/var/lib/supabase-generator/projects"
+ExecStart=/usr/bin/python3 /workspace/src/web/web_interface.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

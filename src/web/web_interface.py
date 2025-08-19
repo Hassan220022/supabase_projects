@@ -29,11 +29,11 @@ def create_project():
         specs = request.form['specs']
         username = request.form.get('username')
         password = request.form.get('password')
-        # Use fixed database settings
-        db_host = '192.168.1.43'
-        db_port = '5432'
-        db_user = 'postgres'
-        db_password = 'your_password'
+        # Use configurable database settings with environment variables fallback
+        db_host = os.environ.get('SUPABASE_DB_HOST', '192.168.1.43')
+        db_port = os.environ.get('SUPABASE_DB_PORT', '5432')
+        db_user = os.environ.get('SUPABASE_DB_USER', 'postgres')
+        db_password = os.environ.get('SUPABASE_DB_PASSWORD', 'postgres')
         use_local_db = request.form.get('use_local_db', 'false') == 'true'
         
         # Validate required fields
@@ -235,4 +235,5 @@ def get_logs():
     return {'logs': logs}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    # Use port 5000 to avoid conflict with Kong service
+    app.run(host='0.0.0.0', port=5000, debug=True)
