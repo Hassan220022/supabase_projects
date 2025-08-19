@@ -48,17 +48,17 @@
         <div class="col-lg-6 mb-4">
             <div class="card h-100 animate-fade-in-up" style="animation-delay: 0.3s;">
                 <div class="card-footer">
-                <small class="text-muted">Project created at: {{ project.created_at }}</small>
-                {% if docker_result %}
+                <small class="text-muted">Project created at: {{ config.created_at }}</small>
+                {% if local_result %}
                 <div class="mt-2">
                     <strong>Docker Status:</strong>
-                    {% if docker_result.success %}
-                        <span class="badge bg-success">✅ {{ docker_result.message }}</span>
+                    {% if local_result.success %}
+                        <span class="badge bg-success">✅ {{ local_result.message }}</span>
                     {% else %}
-                        <span class="badge bg-danger">❌ {{ docker_result.message }}</span>
+                        <span class="badge bg-danger">❌ {{ local_result.message }}</span>
                     {% endif %}
-                    {% if docker_result.output %}
-                    <pre class="mt-2 p-2 bg-light text-dark rounded"><small>{{ docker_result.output }}</small></pre>
+                    {% if local_result.output %}
+                    <pre class="mt-2 p-2 bg-light text-dark rounded"><small>{{ local_result.output }}</small></pre>
                     {% endif %}
                 </div>
                 {% endif %}

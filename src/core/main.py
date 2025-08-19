@@ -40,9 +40,14 @@ class ProjectLogger:
 
 class SupabaseProjectGenerator:
     def __init__(self):
-        self.projects_dir = "/root/supabase_projects"
+        # Use a directory in workspace or home that we have permissions for
+        self.projects_dir = os.environ.get('SUPABASE_PROJECTS_DIR', 
+                                          os.path.join(os.path.expanduser('~'), 'supabase_projects'))
         self.template_dir = "/workspace/templates"
         self.logger = ProjectLogger()
+        
+        # Ensure projects directory exists
+        os.makedirs(self.projects_dir, exist_ok=True)
         
         # Setup Jinja2 environment
         self.jinja_env = Environment(
@@ -130,7 +135,7 @@ class SupabaseProjectGenerator:
         
         return anon_key, service_key, secret_key
     
-    def create_project(self, project_name, machine_size, specs, db_host="192.168.1.43", db_port="5432", db_user="postgres", db_password="your_password", username=None, password=None):
+    def create_project(self, project_name, machine_size, specs, db_host="192.168.1.43", db_port="5432", db_user="postgres", db_password="postgres", username=None, password=None, use_local_db=False):
         """Create a new Supabase project with specified parameters"""
         self.logger.clear_logs()  # Clear previous logs
         self.logger.log(f"Starting Supabase project creation: {project_name}")
@@ -354,6 +359,15 @@ class SupabaseProjectGenerator:
             except Exception as e:
                 last_rc, last_err = 1, str(e)
         return (last_rc, last_out, last_err)
+    
+    def run_locally(self, project_name):
+        """Run project locally (placeholder for future implementation)"""
+        self.logger.log(f"Local run requested for project: {project_name}")
+        return {
+            'success': True,
+            'message': 'Project is configured to use remote PostgreSQL database',
+            'output': 'No local database setup required'
+        }
     
     def create_docker_compose(self, project_path, project_name, config):
         """Create docker-compose.yml for the Supabase project"""
