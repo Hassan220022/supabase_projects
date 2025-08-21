@@ -637,7 +637,7 @@ services:
             # Pull latest images
             print("Pulling latest Docker images...")
             pull_result = subprocess.run(
-                ["docker-compose", "pull"],
+                ["docker", "compose", "pull"],
                 capture_output=True,
                 text=True
             )
@@ -648,7 +648,7 @@ services:
             # Run docker-compose up in detached mode
             print("Starting Docker Compose services...")
             result = subprocess.run(
-                ["docker-compose", "up", "-d"],
+                ["docker", "compose", "up", "-d"],
                 capture_output=True,
                 text=True,
                 check=True
@@ -659,7 +659,7 @@ services:
             # Wait for services to be healthy
             print("Waiting for services to be healthy...")
             health_check_result = subprocess.run(
-                ["docker-compose", "ps"],
+                ["docker", "compose", "ps"],
                 capture_output=True,
                 text=True,
                 check=True
