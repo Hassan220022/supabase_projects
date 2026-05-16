@@ -1,0 +1,32 @@
+services:
+  provisioner:
+    build:
+      context: .
+    image: supabase-proxmox-provisioner:local
+    init: true
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATA_DIR: ${DATA_DIR:-/opt/supabase-provisioner/data}
+      PROJECTS_DIR: ${PROJECTS_DIR:-/opt/supabase-provisioner/projects}
+      SUPABASE_CACHE_DIR: ${SUPABASE_CACHE_DIR:-/opt/supabase-provisioner/supabase-cache}
+      DOCKER_BIN: docker
+      GIT_BIN: git
+    ports:
+      - "${CONTROL_PLANE_PORT:-8080}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA_DIR:-/opt/supabase-provisioner/data}:${DATA_DIR:-/opt/supabase-provisioner/data}
+      - ${PROJECTS_DIR:-/opt/supabase-provisioner/projects}:${PROJECTS_DIR:-/opt/supabase-provisioner/projects}
+      - ${SUPABASE_CACHE_DIR:-/opt/supabase-provisioner/supabase-cache}:${SUPABASE_CACHE_DIR:-/opt/supabase-provisioner/supabase-cache}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/login', timeout=3)\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s

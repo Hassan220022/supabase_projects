@@ -1,0 +1,19 @@
+[Unit]
+Description=Self-hosted Supabase Provisioner
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+
+[Service]
+Type=simple
+User=supabase-provisioner
+Group=docker
+WorkingDirectory=/opt/supabase-provisioner/app
+EnvironmentFile=/opt/supabase-provisioner/.env
+ExecStart=/opt/supabase-provisioner/app/.venv/bin/uvicorn supabase_provisioner.main:app --host 0.0.0.0 --port 8080
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

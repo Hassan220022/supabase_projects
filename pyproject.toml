@@ -1,0 +1,31 @@
+[project]
+name = "supabase-proxmox-provisioner"
+version = "0.1.0"
+description = "Self-hosted Supabase project provisioner for Proxmox/Docker"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "httpx>=0.27.0",
+  "itsdangerous>=2.2.0",
+  "jinja2>=3.1.4",
+  "pydantic>=2.8.0",
+  "pydantic-settings>=2.4.0",
+  "python-multipart>=0.0.9",
+  "starlette<1.0.0",
+  "uvicorn[standard]>=0.30.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.setuptools.packages.find]
+include = ["supabase_provisioner*"]
+
+[tool.setuptools.package-data]
+supabase_provisioner = ["templates/*.html", "static/*"]

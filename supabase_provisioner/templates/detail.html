@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ project.name }}</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">S</span><span>Provisioner</span></div>
+        <nav><a href="/">Projects</a></nav>
+      </aside>
+      <main class="content">
+        <a class="back-link" href="/">Back to projects</a>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">{{ project.slug }}</p>
+            <h1>{{ project.name }}</h1>
+          </div>
+          <span class="status status-{{ project.status }}">{{ project.status }}</span>
+        </header>
+
+        <div data-flash-slot>
+          {% if flash %}
+          <div class="flash flash-{{ flash.level }}" role="status">{{ flash.message }}</div>
+          {% endif %}
+        </div>
+
+        {% if project.last_error %}<pre class="error">{{ project.last_error }}</pre>{% endif %}
+
+        <section class="actions-bar">
+          <a class="button-link" href="/projects/{{ project.slug }}/studio-login">Open Studio</a>
+          <form method="post" action="/projects/{{ project.slug }}/start" data-async-form data-pending-message="Starting project..."><button type="submit" data-loading-text="Starting...">Start</button></form>
+          <form method="post" action="/projects/{{ project.slug }}/stop" data-async-form data-pending-message="Stopping project..."><button type="submit" class="ghost" data-loading-text="Stopping...">Stop</button></form>
+          <form method="post" action="/projects/{{ project.slug }}/backup" data-async-form data-pending-message="Writing backup..."><button type="submit" class="ghost" data-loading-text="Backing up...">Backup</button></form>
+          <form method="post" action="/projects/{{ project.slug }}/upgrade" data-async-form data-pending-message="Backing up and upgrading project..."><button type="submit" class="ghost" data-loading-text="Upgrading...">Backup + Upgrade</button></form>
+        </section>
+
+        <section class="detail-grid">
+          <article class="panel studio-panel">
+            <h2>Studio login</h2>
+            <p>Open Studio through the in-browser project login. Do not use the raw gateway URL unless you want the browser Basic Auth dialog.</p>
+            <dl class="details compact">
+              <dt>URL</dt><dd><a href="/projects/{{ project.slug }}/studio-login">/projects/{{ project.slug }}/studio-login</a></dd>
+              <dt>Username</dt><dd><code>{{ project.secrets.dashboard_username }}</code></dd>
+              <dt>Password</dt><dd><code>{{ project.secrets.dashboard_password }}</code></dd>
+            </dl>
+          </article>
+
+          <article class="panel">
+            <h2>Connection details</h2>
+            <dl class="details">
+              <dt>API URL</dt><dd><code>{{ project.api_url }}</code></dd>
+              <dt>Studio login</dt><dd><a href="/projects/{{ project.slug }}/studio-login">/projects/{{ project.slug }}/studio-login</a></dd>
+              <dt>Publishable key</dt><dd><code>{{ project.secrets.get("supabase_publishable_key", "Read .env after provision") }}</code></dd>
+              <dt>Secret/service key</dt><dd><code>{{ project.secrets.get("supabase_secret_key", "Read .env after provision") }}</code></dd>
+              <dt>Project directory</dt><dd><code>{{ project.base_dir }}</code></dd>
+            </dl>
+          </article>
+
+          <article class="panel">
+            <h2>Operations</h2>
+            <form method="post" action="/projects/{{ project.slug }}/restore" class="stack-form" data-async-form data-pending-message="Restoring project...">
+              <label>SQL backup
+                <select name="sql_backup_name" required>
+                  {% for backup in backups if backup.endswith(".sql") %}
+                  <option value="{{ backup }}">{{ backup }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>Storage backup
+                <select name="storage_backup_name">
+                  <option value="">Database only</option>
+                  {% for backup in backups if backup.endswith(".tar.gz") %}
+                  <option value="{{ backup }}">{{ backup }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>Confirm restore <input name="confirm_slug" placeholder="{{ project.slug }}" required></label>
+              <button type="submit" class="ghost" data-loading-text="Restoring...">Restore</button>
+            </form>
+          </article>
+        </section>
+
+        <section class="panel danger">
+          <h2>Destructive action</h2>
+          <form method="post" action="/projects/{{ project.slug }}/delete" class="delete-form" data-async-form data-pending-message="Checking deletion confirmation...">
+            <label>Type {{ project.slug }} <input name="confirm_slug"></label>
+            <button type="submit" data-loading-text="Deleting...">Delete Project</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h2>Logs</h2>
+          <div class="logs">
+            {% for log in logs %}
+            <pre>{{ log.created_at }} {{ log.operation }} {{ log.status }}
+{{ log.message }}</pre>
+            {% endfor %}
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
